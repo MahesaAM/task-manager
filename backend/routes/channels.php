@@ -7,13 +7,13 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
 });
 
 Broadcast::channel('tasks', function ($user) {
-    return true; // Allow all authenticated users
+    return $user !== null; // Allow all authenticated users via api guard
 });
 
 Broadcast::channel('task.{taskId}', function ($user, $taskId) {
-    return true; // Allow all authenticated users for now
+    return $user !== null; // Allow all authenticated users via api guard
 });
 
 Broadcast::channel('test-channel', function ($user) {
-    return true; // Allow all authenticated users for testing
+    return $user !== null; // Allow all authenticated users via api guard
 });

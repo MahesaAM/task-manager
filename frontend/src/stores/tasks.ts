@@ -144,28 +144,49 @@ export const useTaskStore = defineStore("tasks", () => {
 
   const createComment = async (taskId: number, comment: string) => {
     const newComment = await commentApi.createComment(taskId, comment);
-    if (currentTask.value?.id === taskId) {
-      currentTask.value.comments = currentTask.value.comments || [];
-      currentTask.value.comments.push(newComment);
-    }
+    // Real-time updates will handle updating the comments array
     return newComment;
   };
 
   const updateComment = async (id: number, comment: string) => {
     const updatedComment = await commentApi.updateComment(id, comment);
-    if (currentTask.value?.comments) {
-      const index = currentTask.value.comments.findIndex((c) => c.id === id);
-      if (index !== -1) {
-        currentTask.value.comments[index] = updatedComment;
-      }
-    }
+    // Real-time updates will handle updating the comments array
     return updatedComment;
   };
 
   const deleteComment = async (id: number) => {
     await commentApi.deleteComment(id);
-    if (currentTask.value?.comments) {
-      currentTask.value.comments = currentTask.value.comments.filter((c) => c.id !== id);
+    // Real-time updates will handle updating the comments array
+  };
+
+  // Set up real-time listeners
+  const setupRealtimeListeners = () => {
+    if (window.Echo) {
+      window.Echo.channel("tasks")
+        .listen(".task.created", (data: { task: Task }) => {
+          tasks.value.unshift(data.task);
+          if (pagination.value) {
+            pagination.value.total += 1;
+          }
+        })
+        .listen(".task.updated", (data: { task: Task }) => {
+          const index = tasks.value.findIndex((t) => t.id === data.task.id);
+          if (index !== -1) {
+            tasks.value[index] = data.task;
+          }
+          if (currentTask.value?.id === data.task.id) {
+            currentTask.value = data.task;
+          }
+        })
+        .listen(".task.deleted", (data: { task_id: number }) => {
+          tasks.value = tasks.value.filter((t) => t.id !== data.task_id);
+          if (pagination.value) {
+            pagination.value.total -= 1;
+          }
+          if (currentTask.value?.id === data.task_id) {
+            currentTask.value = null;
+          }
+        });
     }
   };
 
@@ -192,5 +213,6 @@ export const useTaskStore = defineStore("tasks", () => {
     createComment,
     updateComment,
     deleteComment,
+    setupRealtimeListeners,
   };
 });

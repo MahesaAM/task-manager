@@ -16,14 +16,14 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:jwt');
 
+// Broadcasting Authentication (needs to be outside auth middleware for JWT)
+Broadcast::routes(['middleware' => ['auth:api']]);
+
 // Authentication routes
 Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
 Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:jwt');
 Route::get('user', [AuthController::class, 'me'])->middleware('auth:jwt');
-
-// Broadcasting Authentication (needs to be outside auth middleware for JWT)
-Broadcast::routes(['middleware' => ['auth:jwt']]);
 
 // Protected routes
 Route::middleware('auth:jwt')->group(function () {

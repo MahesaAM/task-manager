@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import type { User } from "@/types";
 import { authApi } from "@/utils/api";
+import { useTaskStore } from "./tasks";
 
 export const useAuthStore = defineStore("auth", () => {
   const user = ref<User | null>(null);
@@ -51,6 +52,11 @@ export const useAuthStore = defineStore("auth", () => {
       const response = await authApi.login(email, password);
       setToken(response.token);
       setUser(response.user);
+
+      // Set up real-time listeners after login
+      const taskStore = useTaskStore();
+      taskStore.setupRealtimeListeners();
+
       return response;
     } finally {
       isLoading.value = false;

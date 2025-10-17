@@ -7,5 +7,5 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// Broadcasting routes
-Broadcast::routes();
+// Broadcasting routes with API auth
+Broadcast::routes(['middleware' => ['auth:api']]);

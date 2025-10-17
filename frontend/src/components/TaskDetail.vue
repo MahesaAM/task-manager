@@ -569,6 +569,10 @@ import { useAuthStore } from "@/stores/auth";
 import BaseButton from "@/components/base/Button.vue";
 import BaseTextarea from "@/components/base/Textarea.vue";
 import BaseModal from "@/components/base/Modal.vue";
+import Echo from "laravel-echo";
+import io from "socket.io-client";
+
+(window as any).io = io;
 
 interface Props {
   task: Task;
@@ -731,6 +735,29 @@ const deleteAttachment = async (attachment: TaskAttachment) => {
 
 onMounted(() => {
   taskStore.fetchComments(props.task.id);
+
+  // Set up real-time listeners for comments
+  const channel = (window as any).Echo.private(`task.${props.task.id}`);
+  channel
+    .listen(".comment.created", async (e: any) => {
+      await taskStore.fetchComments(props.task.id);
+      nextTick(() => {
+        if (commentsContainer.value) {
+          commentsContainer.value.scrollTop = commentsContainer.value.scrollHeight;
+        }
+      });
+    })
+    .listen(".comment.updated", (e: any) => {
+      taskStore.fetchComments(props.task.id);
+    })
+    .listen(".comment.deleted", (e: any) => {
+      taskStore.fetchComments(props.task.id);
+    });
+});
+
+onUnmounted(() => {
+  // Clean up listeners
+  (window as any).Echo.leave(`task.${props.task.id}`);
 });
 </script>
 

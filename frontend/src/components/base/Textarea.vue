@@ -29,7 +29,7 @@ interface Props {
   placeholder?: string;
   disabled?: boolean;
   error?: string;
-  rows?: number;
+  rows?: number | string;
   id?: string;
 }
 

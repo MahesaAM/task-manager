@@ -564,6 +564,7 @@ const closeTaskDetail = () => {
 
 onMounted(() => {
   fetchTasks();
+  taskStore.setupRealtimeListeners();
 });
 
 // Watch for route changes to refetch tasks

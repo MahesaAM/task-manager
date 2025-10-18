@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import type { Task, PaginatedResponse, TaskComment, TaskAttachment } from "@/types";
 import { taskApi, commentApi, attachmentApi } from "@/utils/api";
+import { useToastStore } from "@/stores/toast";
 
 export const useTaskStore = defineStore("tasks", () => {
   const tasks = ref<Task[]>([]);
@@ -162,30 +163,26 @@ export const useTaskStore = defineStore("tasks", () => {
   // Set up real-time listeners
   const setupRealtimeListeners = () => {
     if (window.Echo) {
+      const toastStore = useToastStore();
+
       window.Echo.channel("tasks")
-        .listen(".task.created", (data: { task: Task }) => {
-          tasks.value.unshift(data.task);
-          if (pagination.value) {
-            pagination.value.total += 1;
-          }
+        .listen(".task.created", async (data: { task: Task }) => {
+          console.log("📡 Real-time Event Received: task.created", data);
+          // Refetch data to ensure consistency
+          await fetchTasks();
+          toastStore.info(`New task "${data.task.title}" was created`);
         })
-        .listen(".task.updated", (data: { task: Task }) => {
-          const index = tasks.value.findIndex((t) => t.id === data.task.id);
-          if (index !== -1) {
-            tasks.value[index] = data.task;
-          }
-          if (currentTask.value?.id === data.task.id) {
-            currentTask.value = data.task;
-          }
+        .listen(".task.updated", async (data: { task: Task }) => {
+          console.log("📡 Real-time Event Received: task.updated", data);
+          // Refetch data to ensure consistency
+          await fetchTasks();
+          toastStore.info(`Task "${data.task.title}" was updated`);
         })
-        .listen(".task.deleted", (data: { task_id: number }) => {
-          tasks.value = tasks.value.filter((t) => t.id !== data.task_id);
-          if (pagination.value) {
-            pagination.value.total -= 1;
-          }
-          if (currentTask.value?.id === data.task_id) {
-            currentTask.value = null;
-          }
+        .listen(".task.deleted", async (data: { task_id: number }) => {
+          console.log("📡 Real-time Event Received: task.deleted", data);
+          // Refetch data to ensure consistency
+          await fetchTasks();
+          toastStore.info(`Task was deleted`);
         });
     }
   };

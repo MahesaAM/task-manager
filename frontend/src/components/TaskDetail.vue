@@ -746,12 +746,23 @@ onMounted(() => {
           commentsContainer.value.scrollTop = commentsContainer.value.scrollHeight;
         }
       });
+      toastStore.info("New comment added");
     })
     .listen(".comment.updated", (e: any) => {
       taskStore.fetchComments(props.task.id);
+      toastStore.info("Comment updated");
     })
     .listen(".comment.deleted", (e: any) => {
       taskStore.fetchComments(props.task.id);
+      toastStore.info("Comment deleted");
+    })
+    .listen(".attachment.created", (e: any) => {
+      taskStore.fetchTask(props.task.id); // Refresh attachments
+      toastStore.info("New attachment added");
+    })
+    .listen(".attachment.deleted", (e: any) => {
+      taskStore.fetchTask(props.task.id); // Refresh attachments
+      toastStore.info("Attachment deleted");
     });
 });
 

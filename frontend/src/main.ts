@@ -14,21 +14,24 @@ const app = createApp(App);
 app.use(createPinia());
 app.use(router);
 
-// Configure Laravel Echo with Socket.IO
+// Configure Laravel Echo for real-time broadcasting with Socket.IO
 const token = localStorage.getItem("token");
-
-window.io = io;
 
 window.Echo = new Echo({
   broadcaster: "socket.io",
   host: "http://localhost:6001",
+  client: io,
   auth: {
     headers: {
       Authorization: `Bearer ${token}`,
     },
   },
+  authEndpoint: "http://localhost:8000/broadcasting/auth",
   csrfToken: null,
-  bearerToken: token,
+  encrypted: false,
+  forceTLS: false,
+  disableStats: true,
+  enabledTransports: ["ws", "wss", "polling", "flashsocket"],
 });
 
 app.mount("#app");
